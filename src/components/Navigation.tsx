@@ -45,6 +45,13 @@ const Navigation = () => {
               >
                 Contact
               </a>
+              {/* New Dashboard link */}
+              <a
+                onClick={() => navigate("/dashboard")}
+                className="cursor-pointer text-base text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Dashboard
+              </a>
             </nav>
             <Button
               className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white text-base rounded-full px-6 py-3 font-medium"
@@ -93,6 +100,17 @@ const Navigation = () => {
               onClick={() => setIsOpen(false)}
             >
               Contact
+            </a>
+            {/* New Dashboard link in mobile menu */}
+            <a
+              className="block px-3 py-2 text-base font-medium text-gray-700 
+                         hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer"
+              onClick={() => {
+                navigate("/dashboard");
+                setIsOpen(false);
+              }}
+            >
+              Dashboard
             </a>
             <div className="pt-3">
               <Button

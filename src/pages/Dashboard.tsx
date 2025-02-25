@@ -47,15 +47,12 @@ const Dashboard = () => {
 
   const handleGenerateInsights = async (pitch: typeof mockPitches[0]) => {
     setLoading(pitch.id);
-    // Now the third parameter is optional, so this call is valid
     const insights = await generatePitchInsights(pitch.role, pitch.company);
     setLoading(null);
 
     if (insights) {
-      setPitches(current =>
-        current.map(p =>
-          p.id === pitch.id ? { ...p, insights } : p
-        )
+      setPitches((current) =>
+        current.map((p) => (p.id === pitch.id ? { ...p, insights } : p))
       );
       toast.success("AI insights generated successfully!");
     }
@@ -83,7 +80,8 @@ const Dashboard = () => {
               <Button
                 onClick={() => navigate("/questionnaire")}
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-white font-semibold shadow-md hover:shadow-lg transition-shadow"
+                // Updated the orange here to blue
+                className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white font-semibold shadow-md hover:shadow-lg transition-shadow"
               >
                 <Plus className="mr-2 h-5 w-5" /> Create New Pitch
               </Button>
@@ -107,9 +105,13 @@ const Dashboard = () => {
                   <TableBody>
                     {pitches.map((pitch) => (
                       <TableRow key={pitch.id}>
-                        <TableCell className="font-medium text-gray-900">{pitch.role}</TableCell>
+                        <TableCell className="font-medium text-gray-900">
+                          {pitch.role}
+                        </TableCell>
                         <TableCell>{pitch.company}</TableCell>
-                        <TableCell>{new Date(pitch.date).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {new Date(pitch.date).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {pitch.status}

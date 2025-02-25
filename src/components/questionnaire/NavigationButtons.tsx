@@ -39,14 +39,16 @@ export const NavigationButtons = ({
       {currentStep === totalSteps ? (
         <Button
           onClick={onFinalize}
-          className="bg-[#FEC6A1] hover:bg-[#FEB68D] text-gray-800"
+          // Updated to the new blue color
+          className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white"
         >
           Finalise <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       ) : (
         <Button
           onClick={onNext}
-          className="bg-[#FEC6A1] hover:bg-[#FEB68D] text-gray-800"
+          // Updated to the new blue color
+          className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white"
         >
           Next <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
