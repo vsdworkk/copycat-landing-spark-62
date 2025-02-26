@@ -53,10 +53,7 @@ ${formatStarExample(starExample2, 2)}
   `;
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Highlight.configure({ multicolor: true }),
-    ],
+    extensions: [StarterKit, Highlight.configure({ multicolor: true })],
     content: initialContent,
     onUpdate: ({ editor }) => {
       const text = editor.getText();
@@ -100,6 +97,7 @@ ${formatStarExample(starExample2, 2)}
     };
   }, [editor]);
 
+  // Initialize word count
   useEffect(() => {
     if (editor) {
       const text = editor.getText();
