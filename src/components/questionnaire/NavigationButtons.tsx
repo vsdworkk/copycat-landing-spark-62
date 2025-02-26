@@ -27,6 +27,13 @@ export const NavigationButtons = ({
     }
   };
 
+  // Decide label for the "next" button
+  // The step before final preview (totalSteps - 1) should show "Submit" instead of "Next".
+  let nextButtonLabel = "Next";
+  if (currentStep === totalSteps - 1) {
+    nextButtonLabel = "Submit";
+  }
+
   return (
     <div className="mt-8 flex justify-between gap-4">
       <Button
@@ -36,10 +43,10 @@ export const NavigationButtons = ({
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back
       </Button>
+
       {currentStep === totalSteps ? (
         <Button
           onClick={onFinalize}
-          // Updated to the new blue color
           className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white"
         >
           Finalise <ArrowRight className="ml-2 h-4 w-4" />
@@ -47,10 +54,9 @@ export const NavigationButtons = ({
       ) : (
         <Button
           onClick={onNext}
-          // Updated to the new blue color
           className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white"
         >
-          Next <ArrowRight className="ml-2 h-4 w-4" />
+          {nextButtonLabel} <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       )}
     </div>

@@ -18,9 +18,11 @@ interface StarExample {
 interface FinalPreviewProps {
   starExample1: StarExample;
   starExample2: StarExample;
+  // New prop for displaying the webhook response
+  webhookResponse?: any;
 }
 
-export const FinalPreview = ({ starExample1, starExample2 }: FinalPreviewProps) => {
+export const FinalPreview = ({ starExample1, starExample2, webhookResponse }: FinalPreviewProps) => {
   const { toast } = useToast();
   const [wordCount, setWordCount] = useState(0);
 
@@ -55,7 +57,7 @@ ${example.result}
       const words = text.trim().split(/\s+/).length;
       setWordCount(words);
 
-      // Simple grammar checks
+      // Simple grammar checks (demo)
       if (text.includes("  ")) {
         toast({
           title: "Writing Tip",
@@ -159,6 +161,16 @@ ${example.result}
           </div>
         </ScrollArea>
       </Card>
+
+      {/* Display webhook response in the "edit section" if available */}
+      {webhookResponse && (
+        <div className="mt-6 p-4 border border-gray-200 rounded-md">
+          <h2 className="text-xl font-bold">Edit Section (Webhook Response)</h2>
+          <pre className="mt-2 text-sm whitespace-pre-wrap">
+            {JSON.stringify(webhookResponse, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 };

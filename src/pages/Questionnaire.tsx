@@ -13,22 +13,71 @@ const TOTAL_STEPS = 11;
 const Questionnaire = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Role & Experience
   const [selectedRoleName, setSelectedRoleName] = useState<string>("");
   const [customRoleName, setCustomRoleName] = useState<string>("");
   const [roleLevel, setRoleLevel] = useState<string>("");
   const [pitchWordLimit, setPitchWordLimit] = useState<string>("");
+  const [roleDescription, setRoleDescription] = useState<string>(""); // <-- New field
   const [yearsOfExperience, setYearsOfExperience] = useState<string>("");
   const [relevantExperience, setRelevantExperience] = useState<string>("");
+
+  // STAR Example #1
   const [situation, setSituation] = useState<string>("");
   const [task, setTask] = useState<string>("");
   const [action, setAction] = useState<string>("");
   const [result, setResult] = useState<string>("");
+
+  // STAR Example #2
   const [situationTwo, setSituationTwo] = useState<string>("");
   const [taskTwo, setTaskTwo] = useState<string>("");
   const [actionTwo, setActionTwo] = useState<string>("");
   const [resultTwo, setResultTwo] = useState<string>("");
 
-  const handleNext = () => {
+  // Store webhook response so we can display it in FinalPreview
+  const [webhookResponse, setWebhookResponse] = useState<any>(null);
+
+  // Next/Prev logic
+  const handleNext = async () => {
+    // On step 10 (the "Submit" click), send data to webhook
+    if (currentStep === 10) {
+      const dataToSend = {
+        selectedRoleName,
+        customRoleName,
+        roleLevel,
+        pitchWordLimit,
+        roleDescription, // <-- Include roleDescription
+        yearsOfExperience,
+        relevantExperience,
+        starExample1: { situation, task, action, result },
+        starExample2: {
+          situation: situationTwo,
+          task: taskTwo,
+          action: actionTwo,
+          result: resultTwo,
+        },
+      };
+
+      try {
+        const response = await fetch(
+          "https://wadusilva.app.n8n.cloud/webhook-test/create-pitch",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataToSend),
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Error while submitting to webhook");
+        }
+        const resultData = await response.json();
+        setWebhookResponse(resultData);
+      } catch (error) {
+        console.error("Error submitting data to webhook:", error);
+      }
+    }
+
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep((prev) => prev + 1);
     }
@@ -44,8 +93,10 @@ const Questionnaire = () => {
     handleFinalization(navigate);
   };
 
+  // Render each step
   const renderStep = () => {
     switch (currentStep) {
+      // Step 1: RoleInformation
       case 1:
         return (
           <RoleInformation
@@ -57,8 +108,11 @@ const Questionnaire = () => {
             setRoleLevel={setRoleLevel}
             pitchWordLimit={pitchWordLimit}
             setPitchWordLimit={setPitchWordLimit}
+            roleDescription={roleDescription}         // <-- Pass state here
+            setRoleDescription={setRoleDescription}   // <-- Pass state here
           />
         );
+      // Step 2: ExperienceInformation
       case 2:
         return (
           <ExperienceInformation
@@ -68,7 +122,7 @@ const Questionnaire = () => {
             setRelevantExperience={setRelevantExperience}
           />
         );
-      // First STAR Example (Steps 3-6)
+      // STAR Example #1
       case 3:
         return (
           <StarExample
@@ -105,7 +159,7 @@ const Questionnaire = () => {
             currentStep={currentStep}
           />
         );
-      // Second STAR Example (Steps 7-10)
+      // STAR Example #2
       case 7:
         return (
           <StarExample
@@ -142,6 +196,7 @@ const Questionnaire = () => {
             currentStep={currentStep}
           />
         );
+      // Step 11: Final Preview
       case 11:
         return (
           <FinalPreview
@@ -149,14 +204,15 @@ const Questionnaire = () => {
               situation,
               task,
               action,
-              result
+              result,
             }}
             starExample2={{
               situation: situationTwo,
               task: taskTwo,
               action: actionTwo,
-              result: resultTwo
+              result: resultTwo,
             }}
+            webhookResponse={webhookResponse}
           />
         );
       default:
