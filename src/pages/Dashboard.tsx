@@ -4,15 +4,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { FileText, Plus, Download, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { generatePitchInsights } from "@/utils/ai";
 import { toast } from "sonner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useUser } from "@supabase/auth-helpers-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+// Extended pitch type with a document property
+type Pitch = {
+  id: number;
+  role: string;
+  company: string;
+  date: string;
+  status: string;
+  insights: string;
+  document?: string; // <--- for storing final doc preview
+};
 
 // Mock data for demonstration
-const mockPitches = [
+const mockPitches: Pitch[] = [
   {
     id: 1,
     role: "Software Engineer",
@@ -20,6 +39,7 @@ const mockPitches = [
     date: "2024-03-15",
     status: "Completed",
     insights: "",
+    document: "",
   },
   {
     id: 2,
@@ -28,6 +48,7 @@ const mockPitches = [
     date: "2024-03-10",
     status: "Completed",
     insights: "",
+    document: "",
   },
   {
     id: 3,
@@ -36,27 +57,68 @@ const mockPitches = [
     date: "2024-03-05",
     status: "Completed",
     insights: "",
+    document: "",
   },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [pitches, setPitches] = useState(mockPitches);
+  const [pitches, setPitches] = useState<Pitch[]>(mockPitches);
   const [loading, setLoading] = useState<number | null>(null);
   const user = useUser();
 
-  const handleGenerateInsights = async (pitch: typeof mockPitches[0]) => {
+  // For document preview
+  const [selectedPitch, setSelectedPitch] = useState<Pitch | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Handle AI Insights
+  const handleGenerateInsights = async (pitch: Pitch) => {
     setLoading(pitch.id);
     const insights = await generatePitchInsights(pitch.role, pitch.company);
     setLoading(null);
 
     if (insights) {
       setPitches((current) =>
-        current.map((p) => (p.id === pitch.id ? { ...p, insights } : p))
+        current.map((p) =>
+          p.id === pitch.id
+            ? { ...p, insights }
+            : p
+        )
       );
       toast.success("AI insights generated successfully!");
     }
   };
+
+  // Handle "View" button => open doc preview
+  const handleViewPitch = (pitch: Pitch) => {
+    if (!pitch.document) {
+      toast.error("No final document found for this pitch.");
+      return;
+    }
+    setSelectedPitch(pitch);
+    setIsDialogOpen(true);
+  };
+
+  // ----- NEW: Check localStorage for a "finalDoc" from the questionnaire's final step -----
+  useEffect(() => {
+    const finalDoc = localStorage.getItem("finalDoc");
+    if (finalDoc) {
+      // We'll add a new pitch (or you could merge into an existing pitch).
+      const newPitch: Pitch = {
+        id: pitches.length + 1,
+        role: "APS Final Pitch",
+        company: "N/A",
+        date: new Date().toISOString().split("T")[0],
+        status: "Completed",
+        insights: "",
+        document: finalDoc,
+      };
+      setPitches((prev) => [...prev, newPitch]);
+
+      // Once consumed, remove from localStorage
+      localStorage.removeItem("finalDoc");
+    }
+  }, []);
 
   return (
     <SidebarProvider>
@@ -70,7 +132,8 @@ const Dashboard = () => {
                 <SidebarTrigger />
                 <div className="space-y-1">
                   <h1 className="text-4xl font-bold text-gray-900">
-                    Welcome Back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+                    Welcome Back
+                    {user?.email ? `, ${user.email.split('@')[0]}` : ''}!
                   </h1>
                   <p className="text-gray-600">
                     View and manage your pitches below
@@ -80,7 +143,6 @@ const Dashboard = () => {
               <Button
                 onClick={() => navigate("/questionnaire")}
                 size="lg"
-                // Updated the orange here to blue
                 className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white font-semibold shadow-md hover:shadow-lg transition-shadow"
               >
                 <Plus className="mr-2 h-5 w-5" /> Create New Pitch
@@ -118,7 +180,11 @@ const Dashboard = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewPitch(pitch)}
+                          >
                             <FileText className="h-4 w-4 mr-2" />
                             View
                           </Button>
@@ -136,7 +202,9 @@ const Dashboard = () => {
                             disabled={loading === pitch.id}
                           >
                             <Sparkles className="h-4 w-4 mr-2" />
-                            {loading === pitch.id ? 'Generating...' : 'Generate'}
+                            {loading === pitch.id
+                              ? "Generating..."
+                              : "Generate"}
                           </Button>
                           {pitch.insights && (
                             <div className="mt-2 text-sm text-gray-600">
@@ -151,6 +219,38 @@ const Dashboard = () => {
               </ScrollArea>
             </Card>
           </div>
+
+          {/* Document Preview Dialog */}
+          {selectedPitch && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{selectedPitch.role} Document</DialogTitle>
+                  <DialogDescription>
+                    Preview of your final pitch document
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="my-4 p-3 border rounded-md bg-white max-h-[50vh] overflow-y-auto">
+                  {selectedPitch.document ? (
+                    /* Render as HTML so the user sees formatted text */
+                    <div
+                      className="prose text-sm leading-6"
+                      dangerouslySetInnerHTML={{
+                        __html: selectedPitch.document,
+                      }}
+                    />
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No document content found.
+                    </p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
     </SidebarProvider>

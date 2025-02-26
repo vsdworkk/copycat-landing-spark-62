@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Bold, Italic, Undo, Type, List, ListOrdered } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Highlight from '@tiptap/extension-highlight';
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Highlight from "@tiptap/extension-highlight";
 
 interface StarExample {
   situation: string;
@@ -18,11 +18,14 @@ interface StarExample {
 interface FinalPreviewProps {
   starExample1: StarExample;
   starExample2: StarExample;
-  // New prop for displaying the webhook response
-  webhookResponse?: any;
+  webhookResponse?: any; // optional
 }
 
-export const FinalPreview = ({ starExample1, starExample2, webhookResponse }: FinalPreviewProps) => {
+export const FinalPreview = ({
+  starExample1,
+  starExample2,
+  webhookResponse,
+}: FinalPreviewProps) => {
   const { toast } = useToast();
   const [wordCount, setWordCount] = useState(0);
 
@@ -44,12 +47,15 @@ ${example.result}
 `;
   };
 
-  const initialContent = `${formatStarExample(starExample1, 1)}\n\n${formatStarExample(starExample2, 2)}`;
+  const initialContent = `
+${formatStarExample(starExample1, 1)}
+${formatStarExample(starExample2, 2)}
+  `;
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Highlight.configure({ multicolor: true })
+      Highlight.configure({ multicolor: true }),
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -57,7 +63,7 @@ ${example.result}
       const words = text.trim().split(/\s+/).length;
       setWordCount(words);
 
-      // Simple grammar checks (demo)
+      // Demo grammar checks
       if (text.includes("  ")) {
         toast({
           title: "Writing Tip",
@@ -65,16 +71,34 @@ ${example.result}
           variant: "default",
         });
       }
-
       if (text.toLowerCase().includes("very")) {
         toast({
           title: "Writing Tip",
-          description: "Consider using stronger, more specific words instead of 'very'.",
+          description:
+            "Consider using stronger, more specific words instead of 'very'.",
           variant: "default",
         });
       }
     },
   });
+
+  // ----- NEW: Store the updated content in localStorage so Dashboard can retrieve it -----
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleStoreDoc = () => {
+      // We'll store HTML so we can preview with formatting
+      const html = editor.getHTML();
+      localStorage.setItem("finalDoc", html);
+    };
+
+    // onUpdate is already configured above, but we attach our own listener as well
+    editor.on("update", handleStoreDoc);
+
+    return () => {
+      editor.off("update", handleStoreDoc);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (editor) {
@@ -96,9 +120,7 @@ ${example.result}
         <p className="text-gray-600 text-lg font-roboto">
           Review and edit your STAR examples below ✨
         </p>
-        <div className="text-sm text-gray-500">
-          Word count: {wordCount}
-        </div>
+        <div className="text-sm text-gray-500">Word count: {wordCount}</div>
       </div>
 
       <Card className="p-8 bg-white shadow-lg">
@@ -108,7 +130,7 @@ ${example.result}
               variant="outline"
               size="sm"
               onClick={() => editor.chain().focus().toggleBold().run()}
-              className={editor.isActive('bold') ? 'bg-slate-200' : ''}
+              className={editor.isActive("bold") ? "bg-slate-200" : ""}
             >
               <Bold className="h-4 w-4" />
             </Button>
@@ -116,15 +138,19 @@ ${example.result}
               variant="outline"
               size="sm"
               onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={editor.isActive('italic') ? 'bg-slate-200' : ''}
+              className={editor.isActive("italic") ? "bg-slate-200" : ""}
             >
               <Italic className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={editor.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              className={
+                editor.isActive("heading", { level: 2 }) ? "bg-slate-200" : ""
+              }
             >
               <Type className="h-4 w-4" />
             </Button>
@@ -132,7 +158,7 @@ ${example.result}
               variant="outline"
               size="sm"
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={editor.isActive('bulletList') ? 'bg-slate-200' : ''}
+              className={editor.isActive("bulletList") ? "bg-slate-200" : ""}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -140,7 +166,7 @@ ${example.result}
               variant="outline"
               size="sm"
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={editor.isActive('orderedList') ? 'bg-slate-200' : ''}
+              className={editor.isActive("orderedList") ? "bg-slate-200" : ""}
             >
               <ListOrdered className="h-4 w-4" />
             </Button>
@@ -162,7 +188,7 @@ ${example.result}
         </ScrollArea>
       </Card>
 
-      {/* Display webhook response in the "edit section" if available */}
+      {/* Optional: Show webhook response if present */}
       {webhookResponse && (
         <div className="mt-6 p-4 border border-gray-200 rounded-md">
           <h2 className="text-xl font-bold">Edit Section (Webhook Response)</h2>
