@@ -20,7 +20,8 @@ const Hero = () => {
               Struggling with your APS pitch? Let Albert craft a professional-grade pitch in just minutes—stress-free. Try your first pitch free and double your interview chances!
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth">
+              {/* Updated Link from /auth to /signup */}
+              <Link to="/signup">
                 <Button
                   size="lg"
                   className="bg-[#4F67FF] hover:bg-[#4F67FF]/90 text-white rounded-full px-8 py-4 text-base font-medium"
