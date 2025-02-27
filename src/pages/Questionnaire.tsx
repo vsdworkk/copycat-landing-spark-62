@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@supabase/auth-helpers-react";
+import { toast } from "sonner";
 import { RoleInformation } from "@/components/questionnaire/RoleInformation";
 import { ExperienceInformation } from "@/components/questionnaire/ExperienceInformation";
 import { StarExample } from "@/components/questionnaire/StarExample";
@@ -13,7 +16,7 @@ const TOTAL_STEPS = 11;
 const Questionnaire = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-
+  const user = useUser();
   // ---------------------------------------
   // 1) ROLE & EXPERIENCE STATES
   // ---------------------------------------
@@ -146,6 +149,28 @@ const Questionnaire = () => {
   };
 
   const handleFinalize = () => {
+    finalizePitch();
+  };
+
+  const finalizePitch = async () => {
+    if (!user) {
+      toast.error("Please sign in to save your pitch");
+      handleFinalization(navigate);
+      return;
+    }
+
+    const finalDoc = localStorage.getItem("finalDoc") || "";
+    const roleToSave = selectedRoleName || customRoleName || "My Pitch";
+
+    const { error } = await supabase.from("pitches").insert({
+      user_id: user.id,
+      role: roleToSave,
+      pitch_document: finalDoc,
+    });
+
+    error
+      ? toast.error(`Failed to save pitch: ${error.message}`)
+      : toast.success("Pitch saved successfully!");
     handleFinalization(navigate);
   };
 
